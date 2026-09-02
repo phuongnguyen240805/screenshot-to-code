@@ -1,7 +1,25 @@
 import os
 
-NUM_VARIANTS = 4
-NUM_VARIANTS_VIDEO = 2
+
+def _bounded_int_env(name: str, default: int, minimum: int, maximum: int) -> int:
+    """Read a bounded integer environment variable with a safe default."""
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+
+    return max(minimum, min(maximum, value))
+
+
+# Keep upstream defaults when env vars are absent. For the LadiPage internal
+# microservice deployment set NUM_VARIANTS=1 to avoid generating four landing
+# page variants when the caller only consumes one result.
+NUM_VARIANTS = _bounded_int_env("NUM_VARIANTS", 4, 1, 4)
+NUM_VARIANTS_VIDEO = _bounded_int_env("NUM_VARIANTS_VIDEO", 2, 1, 2)
 
 # LLM-related
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
